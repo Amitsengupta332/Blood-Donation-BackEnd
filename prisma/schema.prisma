@@ -1,0 +1,196 @@
+// // This is your Prisma schema file,
+// // learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// generator client {
+//   provider = "prisma-client-js"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+// model User {
+//   id           String     @id @default(uuid())
+//   name         String
+//   email        String     @unique
+//   password     String
+//   bloodType    String
+//   location     String
+//   role         UserRole
+//   availability Boolean    @default(false)
+//   activeStatus UserStatus @default(ACTIVATE)
+//   isDeleted    Boolean    @default(false)
+//   createdAt    DateTime   @default(now())
+//   updatedAt    DateTime   @updatedAt
+
+//   userProfile UserProfile?
+//   request     Request[]
+
+//   @@map("users")
+// }
+
+// model Request {
+//   id                     String        @id @default(uuid())
+//   donorId                String
+//   requesterId            String
+//   phoneNumber            String
+//   dateOfDonation         String
+//   hospitalName           String
+//   hospitalAddress        String
+//   reason                 String
+//   requestStatus          requestStatus @default(PENDING)
+//   alternativePhoneNumber String?
+//   timeOfDonation         String?
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   donor User @relation(fields: [donorId], references: [id])
+
+//   @@map("requests")
+// }
+
+// model UserProfile {
+//   id               String   @id @default(uuid())
+//   userId           String   @unique
+//   bio              String?
+//   age              Int
+//   lastDonationDate String
+//   gender           Gender?
+//   hasAllergies     Boolean? @default(false)
+//   hasDiabetes      Boolean? @default(false)
+//   height           String?
+//   weight           String?
+//   createdAt        DateTime @default(now())
+//   updatedAt        DateTime @updatedAt
+
+//   user User @relation(fields: [userId], references: [id])
+
+//   @@map("userProfiles")
+// }
+
+// enum requestStatus {
+//   PENDING
+//   APPROVED
+//   REJECTED
+// }
+
+// enum UserRole {
+//   USER
+//   ADMIN
+// }
+
+// enum Gender {
+//   MALE
+//   FEMALE
+// }
+
+// enum UserStatus {
+//   ACTIVATE
+//   DEACTIVATE
+// }
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model
+model User {
+  id                String       @id @default(uuid())
+  name              String
+  email             String       @unique
+  password          String
+  bloodType         BloodGroup
+  location          String
+  availability      Boolean      @default(false)
+  activeStatus      UserStatus   @default(ACTIVATE)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  role              UserRole     @default(USER)
+  userProfile       UserProfile?
+  donorRequests     Request[]    @relation("DonorRequests")
+  requesterRequests Request[]    @relation("RequesterRequests")
+
+  @@map("users")
+}
+
+// Request Model
+model Request {
+  id              String        @id @default(uuid())
+  donor           User          @relation("DonorRequests", fields: [donorId], references: [id])
+  donorId         String
+  requester       User          @relation("RequesterRequests", fields: [requesterId], references: [id])
+  requesterId     String
+  phoneNumber     String
+  dateOfDonation  String
+  hospitalName    String
+  hospitalAddress String
+  reason          String
+  requestStatus   RequestStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("requests")
+}
+
+// UserProfile Model
+model UserProfile {
+  id               String   @id @default(uuid())
+  user             User     @relation(fields: [userId], references: [id])
+  userId           String   @unique
+  bio              String?
+  age              Int
+  lastDonationDate String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("userProfiles")
+}
+
+// BloodGroup Enum
+enum BloodGroup {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}
+
+// RequestStatus Enum
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// UserRole Enum
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVATE
+  DEACTIVATE
+}
+
+
+
