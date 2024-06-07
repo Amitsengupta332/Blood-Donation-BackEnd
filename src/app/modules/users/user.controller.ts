@@ -32,21 +32,18 @@ const getAllUser = catchAsync(async (req, res) => {
   });
 });
 
-const getMyProfile = catchAsync(
-  async (req: Request & { user?: any }, res: Response) => {
-    const token = req.headers.authorization || "";
-    const { id } = req.params;
-    console.log(id);
-    const result = await userService.getMyProfile(req.user);
+const getMyProfile = catchAsync(async (req: Request, res: Response) => {
+  const token = req.headers.authorization || "";
 
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "Profile retrieved successfully",
-      data: result,
-    });
-  }
-);
+  const result = await userService.getMyProfile(token);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Profile retrieved successfully",
+    data: result,
+  });
+});
 
 const updateMyProfile = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers.authorization || "";
@@ -73,6 +70,17 @@ const updateUserInfo = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getdonorbyId = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await userService.getdonorbyId(id);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "User retrive successfully",
+    data: result,
+  });
+});
+
 // const getAllUser = async (req: Request, res: Response) => {
 //   const result = await userService.getAllUser();
 //   res.status(200).json({
@@ -88,4 +96,5 @@ export const userController = {
   getMyProfile,
   updateMyProfile,
   updateUserInfo,
+  getdonorbyId
 };

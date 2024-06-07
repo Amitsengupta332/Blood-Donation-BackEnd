@@ -6,6 +6,7 @@ const router = express.Router();
 router.post("/donation-request", RequestControllers.requestDonor);
 
 router.get("/donation-request", RequestControllers.getMyDonationRequest);
+router.get("/received-request", RequestControllers.receivedRequest);
 
 router.put(
   "/donation-request/:requestId",

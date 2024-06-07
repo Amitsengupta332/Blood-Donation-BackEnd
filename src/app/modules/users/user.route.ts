@@ -7,11 +7,8 @@ const router = express.Router();
 
 router.post("/register", userController.registerUser);
 router.get("/donor-list", userController.getAllUser);
-router.get(
-  "/my-profile",
-  auth(UserRole.ADMIN, UserRole.USER),
-  userController.getMyProfile
-);
+router.get("/donor-list/:id", userController.getdonorbyId);
+router.get("/my-profile",  auth(UserRole.ADMIN,UserRole.USER), userController.getMyProfile);
 router.put("/my-profile", userController.updateMyProfile);
 router.patch(
   "/update-user/:id",
