@@ -42,9 +42,10 @@ const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const bcrypt = __importStar(require("bcrypt"));
 const ApiError_1 = __importDefault(require("../../errors/ApiError"));
 const http_status_1 = __importDefault(require("http-status"));
+const client_1 = require("@prisma/client");
 const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
-    //   console.log("user logged in .....", payload);
-    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+    // check: if the user available
+    const userData = yield prisma_1.default.user.findUnique({
         where: {
             email: payload.email,
         },
@@ -57,31 +58,133 @@ const loginUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     if (!isCorrectPassword) {
         throw new Error("Password incorrect! Please try again..");
     }
-    // const accessToken = jwtHelpers.generateToken(
-    //   {
-    //     email: userData.email,
-    //   },
-    //   config.jwt.jwt_secret as Secret,
-    //   config.jwt.expires_in as string
-    // );
     // Create access token
-    const tokenData = { email: userData.email };
-    const accessToken = jwtHelpers_1.jwtHelpers.generateToken(tokenData, config_1.default.jwt.jwt_secret, config_1.default.jwt.expires_in);
-    // const refreshToken = jwtHelpers.generateToken(
-    //   {
-    //     email: userData.email,
-    //   },
-    //   config.jwt.refresh_token_secret as Secret,
-    //   config.jwt.refresh_token_expires_in as string
-    // );
+    const tokenData = {
+        email: userData.email,
+        role: userData.role,
+        id: userData.id,
+    };
+    const accessToken = jwtHelpers_1.jwtHelpers.generateToken(tokenData, config_1.default.JWT_ACCESS_SECRET, config_1.default.JWT_ACCESS_TOKEN_EXPIRES_IN);
     // Create refresh token
-    const refreshToken = jwtHelpers_1.jwtHelpers.generateToken(tokenData, config_1.default.jwt.jwt_secret, config_1.default.jwt.expires_in);
+    const refreshToken = jwtHelpers_1.jwtHelpers.generateToken(tokenData, config_1.default.JWT_REFRESH_SECRET, config_1.default.JWT_REFRESH_TOKEN_EXPIRES_IN);
     return {
         userData,
         accessToken,
         refreshToken,
     };
 });
+const refreshToken = (refreshToken) => __awaiter(void 0, void 0, void 0, function* () {
+    // Decoded the refresh token and verity
+    let decodedData;
+    try {
+        decodedData = jwtHelpers_1.jwtHelpers.verifyToken(refreshToken, config_1.default.JWT_REFRESH_SECRET);
+    }
+    catch (error) {
+        throw new Error("You are not authorized!");
+    }
+    // Check if the user is available in database or not
+    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+        where: {
+            email: decodedData === null || decodedData === void 0 ? void 0 : decodedData.email,
+            activeStatus: client_1.UserStatus.ACTIVATE,
+        },
+    });
+    // if refresh token is verify and user is exist in database then create access token again
+    const tokenData = {
+        email: userData.email,
+        role: userData.role,
+        id: userData.id,
+    };
+    const accessToken = jwtHelpers_1.jwtHelpers.generateToken(tokenData, config_1.default.JWT_ACCESS_SECRET, config_1.default.JWT_ACCESS_TOKEN_EXPIRES_IN);
+    return {
+        accessToken,
+    };
+});
+const changePassword = (user, payload) => __awaiter(void 0, void 0, void 0, function* () {
+    // Check if the user is available in database
+    const userData = yield prisma_1.default.user.findUniqueOrThrow({
+        where: {
+            email: user.email,
+            activeStatus: client_1.UserStatus.ACTIVATE,
+        },
+    });
+    // check: if the old(current) password is correct
+    const isCorrectPassword = yield bcrypt.compare(payload.oldPassword, userData.password);
+    if (!isCorrectPassword) {
+        throw new Error("Password incorrect!");
+    }
+    // hash the password
+    const hashedPassword = yield bcrypt.hash(payload.newPassword, 12);
+    // update the new password
+    yield prisma_1.default.user.update({
+        where: {
+            email: userData.email,
+            activeStatus: client_1.UserStatus.ACTIVATE,
+        },
+        data: {
+            password: hashedPassword,
+        },
+    });
+    return {
+        message: "Password changed successfully!",
+    };
+});
+// const loginUser = async (payload: { email: string; password: string }) => {
+//   //   console.log("user logged in .....", payload);
+//   const userData = await prisma.user.findUniqueOrThrow({
+//     where: {
+//       email: payload.email,
+//     },
+//   });
+//   if (!userData) {
+//     throw new ApiError(
+//       httpStatus.NOT_FOUND,
+//       "User not found! Please try again.."
+//     );
+//   }
+//   // check: if the password correct
+//   const isCorrectPassword: boolean = await bcrypt.compare(
+//     payload.password,
+//     userData.password
+//   );
+//   if (!isCorrectPassword) {
+//     throw new Error("Password incorrect! Please try again..");
+//   }
+//   // const accessToken = jwtHelpers.generateToken(
+//   //   {
+//   //     email: userData.email,
+//   //   },
+//   //   config.jwt.jwt_secret as Secret,
+//   //   config.jwt.expires_in as string
+//   // );
+//   // Create access token
+//   const tokenData = { email: userData.email };
+//   const accessToken = jwtHelpers.generateToken(
+//     tokenData,
+//     config.jwt.jwt_secret as Secret,
+//     config.jwt.expires_in as string
+//   );
+//   // const refreshToken = jwtHelpers.generateToken(
+//   //   {
+//   //     email: userData.email,
+//   //   },
+//   //   config.jwt.refresh_token_secret as Secret,
+//   //   config.jwt.refresh_token_expires_in as string
+//   // );
+//   // Create refresh token
+//   const refreshToken = jwtHelpers.generateToken(
+//     tokenData,
+//     config.jwt.jwt_secret as Secret,
+//     config.jwt.expires_in as string
+//   );
+//   return {
+//     userData,
+//     accessToken,
+//     refreshToken,
+//   };
+// };
 exports.AuthServices = {
     loginUser,
+    refreshToken,
+    changePassword
 };

@@ -33,6 +33,8 @@ const getMyDonationRequest = catchAsync(async (req: Request, res: Response) => {
 const receivedRequest = catchAsync(async (req: Request, res: Response) => {
   const token = req.headers.authorization || "";
 
+  console.log("token", token);
+
   const result = await RequestServices.receivedRequest(token);
 
   sendResponse(res, {
@@ -65,5 +67,5 @@ export const RequestControllers = {
   requestDonor,
   getMyDonationRequest,
   updateRequestStatus,
-  receivedRequest
+  receivedRequest,
 };

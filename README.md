@@ -1,6 +1,6 @@
 # Blood Donation Application
 
-- Live Link : https://assignment-8-steel.vercel.app/
+- Live Link : https://blood-donation-backend-ten.vercel.app/
 
 This Blood Donation Application is a TypeScript-based web application built using Express.js and Prisma for PostgreSQL as the Object Relational Mapping (ORM) tool. It allows users to register, login, request blood donations, manage donation requests, and update their profiles.
 

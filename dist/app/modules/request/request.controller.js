@@ -37,6 +37,17 @@ const getMyDonationRequest = (0, catchAsync_1.default)((req, res) => __awaiter(v
         data: result,
     });
 }));
+const receivedRequest = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = req.headers.authorization || "";
+    console.log("token", token);
+    const result = yield request_service_1.RequestServices.receivedRequest(token);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Donation received   successfully",
+        data: result,
+    });
+}));
 const updateRequestStatus = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const token = req.headers.authorization || "";
     const { requestId } = req.params;
@@ -52,4 +63,5 @@ exports.RequestControllers = {
     requestDonor,
     getMyDonationRequest,
     updateRequestStatus,
+    receivedRequest,
 };

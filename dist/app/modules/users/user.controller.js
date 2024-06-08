@@ -62,6 +62,26 @@ const updateMyProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0
         data: result,
     });
 }));
+const updateUserInfo = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    const result = yield user_service_1.userService.updateUserInfo(id, req.body);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Users profile updated successfully!",
+        data: result,
+    });
+}));
+const getdonorbyId = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    const result = yield user_service_1.userService.getdonorbyId(id);
+    (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "User retrive successfully",
+        data: result,
+    });
+}));
 // const getAllUser = async (req: Request, res: Response) => {
 //   const result = await userService.getAllUser();
 //   res.status(200).json({
@@ -75,4 +95,6 @@ exports.userController = {
     getAllUser,
     getMyProfile,
     updateMyProfile,
+    updateUserInfo,
+    getdonorbyId
 };

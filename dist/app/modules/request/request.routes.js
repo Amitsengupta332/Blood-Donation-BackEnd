@@ -9,5 +9,6 @@ const request_controller_1 = require("./request.controller");
 const router = express_1.default.Router();
 router.post("/donation-request", request_controller_1.RequestControllers.requestDonor);
 router.get("/donation-request", request_controller_1.RequestControllers.getMyDonationRequest);
+router.get("/received-request", request_controller_1.RequestControllers.receivedRequest);
 router.put("/donation-request/:requestId", request_controller_1.RequestControllers.updateRequestStatus);
 exports.requestRoutes = router;

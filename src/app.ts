@@ -10,7 +10,7 @@ const app: Application = express();
 // app.use(cookieParser());
 
 // setting for enable refresh token functionality
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: "https://blood-donation-client-woad.vercel.app", credentials: true }));
 app.use(cookieParser());
 
 //parser

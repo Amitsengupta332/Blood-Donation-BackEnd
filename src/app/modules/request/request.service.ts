@@ -284,7 +284,6 @@ const receivedRequest = async (token: string) => {
     throw new ApiError(httpStatus.FORBIDDEN, "FORBIDDEN");
   }
 
-  // Check if the user is available in database
   const userData = await prisma.user.findUnique({
     where: {
       email: isTokenValid.email,
@@ -298,54 +297,91 @@ const receivedRequest = async (token: string) => {
     );
   }
 
-  console.log(userData);
-
   const result = await prisma.request.findMany({
     where: {
-      donorId: userData.id, // Filter by donorId equal to current user's id
-      // requesterId: {
-      //   not: userData.id, // Filter where requesterId is not equal to current user's id
-      // },
+      donorId: userData.id,
     },
+    include:{
+      requester:true
+    }
   });
-
-  console.log("result", result);
-
-  // Fetch requester data separately
-  const requesterId = result.map((request) => request.requesterId);
-  const requesterData = await prisma.user.findMany({
-    where: {
-      id: {
-        in: requesterId,
-      },
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      bloodType: true,
-      location: true,
-      availability: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-
-  // Merge requester data with the result
-  const resultWithRequester = result.map((request) => {
-    const requester = requesterData.find((user) => user.id === request.donorId);
-    return {
-      ...request,
-      requester,
-    };
-  });
-
-  return resultWithRequester;
+  return result
 };
+
+// const receivedRequest = async (token: string) => {
+//   const isTokenValid = jwtHelpers.verifyToken(
+//     token,
+//     config.JWT_ACCESS_SECRET as Secret
+//   );
+//   // console.log('decode', isTokenValid);
+
+//   if (!isTokenValid) {
+//     throw new ApiError(httpStatus.FORBIDDEN, "FORBIDDEN");
+//   }
+
+//   // Check if the user is available in database
+//   const userData = await prisma.user.findUnique({
+//     where: {
+//       email: isTokenValid.email,
+//     },
+//   });
+
+//   if (!userData) {
+//     throw new ApiError(
+//       httpStatus.NOT_FOUND,
+//       "User not found! Please try again.."
+//     );
+//   }
+
+//   // console.log(userData);
+
+//   const result = await prisma.request.findMany({
+//     where: {
+//       donorId: userData.id, // Filter by donorId equal to current user's id
+//       // requesterId: {
+//       //   not: userData.id, // Filter where requesterId is not equal to current user's id
+//       // },
+//     },
+//   });
+
+//   // console.log("result", result);
+
+//   // Fetch requester data separately
+//   const requesterId = result.map((request) => request.requesterId);
+//   const requesterData = await prisma.user.findMany({
+//     where: {
+//       id: {
+//         in: requesterId,
+//       },
+//     },
+//     select: {
+//       id: true,
+//       name: true,
+//       email: true,
+//       bloodType: true,
+//       location: true,
+//       availability: true,
+//       createdAt: true,
+//       updatedAt: true,
+//     },
+//   });
+
+//   // Merge requester data with the result
+//   const resultWithRequester = result.map((request) => {
+//     const requester = requesterData.find((user) => user.id === request.donorId);
+//     return {
+//       ...request,
+//       requester,
+//     };
+//   });
+//   console.log(resultWithRequester);
+
+//   return resultWithRequester;
+// };
 
 export const RequestServices = {
   requestDonor,
   getMyDonationRequestFromDB,
   updateRequestStatusIntoDB,
-  receivedRequest
+  receivedRequest,
 };

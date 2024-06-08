@@ -50,6 +50,7 @@ exports.userService = void 0;
 const prisma_1 = __importDefault(require("../../../shared/prisma"));
 const bcrypt = __importStar(require("bcrypt"));
 const paginationHelper_1 = require("../../../helpers/paginationHelper");
+const client_1 = require("@prisma/client");
 const user_constant_1 = require("./user.constant");
 const jwtHelpers_1 = require("../../../helpers/jwtHelpers");
 const config_1 = __importDefault(require("../../../config"));
@@ -75,13 +76,14 @@ const http_status_1 = __importDefault(require("http-status"));
 // };
 const registerUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const hashedPassword = yield bcrypt.hash(data.password, 12);
-    console.log({ data });
     const userData = {
         name: data.name,
         email: data.email,
+        role: client_1.UserRole.USER,
         password: hashedPassword,
         bloodType: data.bloodType,
         location: data.location,
+        availability: data.availability,
     };
     const result = yield prisma_1.default.$transaction((transactionClient) => __awaiter(void 0, void 0, void 0, function* () {
         // Operation-1
@@ -91,7 +93,7 @@ const registerUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
         // Operation-2
         const createdProfileData = yield transactionClient.userProfile.create({
             data: {
-                bio: data.bio,
+                bio: data.bio || "",
                 age: data.age,
                 lastDonationDate: data.lastDonationDate,
                 userId: createdUserData.id,
@@ -104,6 +106,41 @@ const registerUser = (data) => __awaiter(void 0, void 0, void 0, function* () {
     }));
     return result;
 });
+// const registerUser = async (data: any) => {
+//   const hashedPassword: string = await bcrypt.hash(data.password, 12);
+//   console.log({ data });
+//   const userData = {
+//     name: data.name,
+//     email: data.email,
+//     password: hashedPassword,
+//     role: UserRole.USER,
+//     bloodType: data.bloodType,
+//     location: data.location,
+//   };
+//   const result = await prisma.$transaction(async (transactionClient) => {
+//     // Operation-1
+//     const createdUserData = await transactionClient.user.create({
+//       data: userData,
+//     });
+//     // Operation-2
+//     const createdProfileData = await transactionClient.userProfile.create({
+//       data: {
+//         bio: data.bio as string,
+//         age: data.age as number,
+//         lastDonationDate: data.lastDonationDate as string,
+//         userId: createdUserData.id as string,
+//       },
+//     });
+//     const { password, ...userDataWithoutPassword } = createdUserData;
+//     // Combine user data and user profile data
+//     const userDataWithProfile = {
+//       ...userDataWithoutPassword,
+//       userProfile: createdProfileData,
+//     };
+//     return userDataWithProfile;
+//   });
+//   return result;
+// };
 const getAllUser = (params, options) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(options);
     const { page, limit, skip } = paginationHelper_1.paginationHelper.calculatePagination(options);
@@ -156,11 +193,13 @@ const getAllUser = (params, options) => __awaiter(void 0, void 0, void 0, functi
     };
 });
 const getMyProfile = (token) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(token);
     // Check if the token is valid or not
-    const isTokenValid = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.jwt_secret);
+    const isTokenValid = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.JWT_ACCESS_SECRET);
     if (!isTokenValid) {
         throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "FORBIDDEN");
     }
+    console.log(isTokenValid);
     // Check if the user is available in database
     const userData = yield prisma_1.default.user.findUniqueOrThrow({
         where: {
@@ -175,7 +214,7 @@ const getMyProfile = (token) => __awaiter(void 0, void 0, void 0, function* () {
             availability: true,
             createdAt: true,
             updatedAt: true,
-            UserProfile: {
+            userProfile: {
                 select: {
                     id: true,
                     userId: true,
@@ -188,12 +227,79 @@ const getMyProfile = (token) => __awaiter(void 0, void 0, void 0, function* () {
             },
         },
     });
-    console.log(userData);
     return userData;
 });
+// const getMyProfile = async (token: string) => {
+//   console.log(token);
+//   // Check if the token is valid or not
+//   const isTokenValid = jwtHelpers.verifyToken(
+//     token,
+//     config.JWT_ACCESS_SECRET as Secret
+//   );
+//   if (!isTokenValid) {
+//     throw new ApiError(httpStatus.FORBIDDEN, "FORBIDDEN");
+//   }
+//   console.log(isTokenValid);
+//   // Check if the user is available in database
+//   // const userData = await prisma.user.findUniqueOrThrow({
+//   //   where: {
+//   //     email: isTokenValid.email,
+//   //   },
+//   //   select: {
+//   //     id: true,
+//   //     name: true,
+//   //     email: true,
+//   //     bloodType: true,
+//   //     location: true,
+//   //     availability: true,
+//   //     createdAt: true,
+//   //     updatedAt: true,
+//   //     UserProfile: {
+//   //       select: {
+//   //         id: true,
+//   //         userId: true,
+//   //         bio: true,
+//   //         age: true,
+//   //         lastDonationDate: true,
+//   //         createdAt: true,
+//   //         updatedAt: true,
+//   //       },
+//   //     },
+//   //   },
+//   // });
+//   const userData = await prisma.user.findUniqueOrThrow({
+//     where: {
+//       email: isTokenValid.email,
+//     },
+//     select: {
+//       id: true,
+//       name: true,
+//       email: true,
+//       bloodType: true,
+//       location: true,
+//       availability: true,
+//       createdAt: true,
+//       updatedAt: true,
+//       UserProfile: {
+//         select: {
+//           id: true,
+//           userId: true,
+//           bio: true,
+//           age: true,
+//           lastDonationDate: true,
+//           createdAt: true,
+//           updatedAt: true,
+//         },
+//       },
+//     },
+//   });
+//   // console.log(userData);
+//   return userData;
+// };
 const updateMyProfile = (token, payload) => __awaiter(void 0, void 0, void 0, function* () {
+    const { bloodType, location, name, email, availability } = payload, userProfileData = __rest(payload, ["bloodType", "location", "name", "email", "availability"]);
     // Check if the token is valid or not
-    const isTokenValid = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.jwt.jwt_secret);
+    const isTokenValid = jwtHelpers_1.jwtHelpers.verifyToken(token, config_1.default.JWT_ACCESS_SECRET);
     if (!isTokenValid) {
         throw new ApiError_1.default(http_status_1.default.FORBIDDEN, "FORBIDDEN");
     }
@@ -207,17 +313,79 @@ const updateMyProfile = (token, payload) => __awaiter(void 0, void 0, void 0, fu
         throw new ApiError_1.default(http_status_1.default.NOT_FOUND, "User not found! Please try again..");
     }
     // update the user profile
-    const updatedData = yield prisma_1.default.userProfile.update({
+    // const updatedData = await prisma.userProfile.update({
+    //   where: {
+    //     userId: userData.id,
+    //   },
+    //   data: payload,
+    // });
+    // return updatedData;
+    const result = yield prisma_1.default.$transaction((transactionClient) => __awaiter(void 0, void 0, void 0, function* () {
+        const updateUserData = yield transactionClient.user.update({
+            where: { id: userData.id },
+            data: { bloodType, location, name, email, availability },
+        });
+        const updateProfileData = yield transactionClient.userProfile.upsert({
+            where: { userId: userData.id }, // Use userId for the unique condition
+            update: userProfileData, // Update if already exists
+            create: {
+                age: userProfileData.age,
+                bio: userProfileData.bio,
+                // gender: userProfileData.gender, // Todo
+                lastDonationDate: userProfileData.lastDonationDate,
+                user: {
+                    connect: { id: userData.id }, // Connect the existing user
+                },
+            },
+        });
+        return updateProfileData;
+    }));
+    return result;
+});
+const updateUserInfo = (id, updateData) => __awaiter(void 0, void 0, void 0, function* () {
+    const updateUserStatus = yield prisma_1.default.user.update({
         where: {
-            userId: userData.id,
+            id,
         },
-        data: payload,
+        data: updateData,
     });
-    return updatedData;
+    return updateUserStatus;
+});
+const getdonorbyId = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    const result = yield prisma_1.default.user.findUnique({
+        where: {
+            id,
+            // isDeleted: false,
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            bloodType: true,
+            location: true,
+            availability: true,
+            createdAt: true,
+            updatedAt: true,
+            userProfile: {
+                select: {
+                    id: true,
+                    userId: true,
+                    bio: true,
+                    age: true,
+                    lastDonationDate: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
+            },
+        },
+    });
+    return result;
 });
 exports.userService = {
     registerUser,
     getAllUser,
     getMyProfile,
     updateMyProfile,
+    updateUserInfo,
+    getdonorbyId
 };

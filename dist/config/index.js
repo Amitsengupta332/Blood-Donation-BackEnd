@@ -7,10 +7,10 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
 dotenv_1.default.config({ path: path_1.default.join(process.cwd(), ".env") });
 exports.default = {
-    env: process.env.NODE_ENV,
-    port: process.env.PORT,
-    jwt: {
-        jwt_secret: process.env.JWT_SECRET,
-        expires_in: process.env.EXPIRES_IN,
-    },
+    ENV: process.env.node_env,
+    PORT: process.env.PORT,
+    JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
+    JWT_ACCESS_TOKEN_EXPIRES_IN: process.env.JWT_ACCESS_TOKEN_EXPIRES_IN,
+    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
+    JWT_REFRESH_TOKEN_EXPIRES_IN: process.env.JWT_REFRESH_TOKEN_EXPIRES_IN,
 };
